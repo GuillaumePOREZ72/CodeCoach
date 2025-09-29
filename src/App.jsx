@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Code, Play, RotataCcw, CheckCircle, ArrowLeft } from "lucide-react";
+import { Code, Play, RotateCcw, CheckCircle, ArrowLeft } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { githubDark } from "@uiw/codemirror-theme-github";
