@@ -87,9 +87,20 @@ function App() {
         `
           You are a helpful interview coach.
           The question is: "${questionData?.problem}".
-          Here is the candidate's
+          Here is the candidate's solution:\n${code}
+
+          1. If correct, say: "✅ Correct! Well done."
+          2. If wrong, give hints but don't reveal the full answer.
         `
-      )
+      );
+
+      const reply =
+        typeof response === "string"
+          ? response
+          : response.message?.content || "";
+      setFeedBack(reply);
+
+      if (reply.includes("✅ Correct!")) setSolved(true);
     } catch (error) {
       setFeedBack(`⛔ Error: ${error.message}`);
     }
