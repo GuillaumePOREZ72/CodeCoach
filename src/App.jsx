@@ -58,7 +58,7 @@ function App() {
           {
             "problem": "string",
             "example": "string",
-            "constrations": "string",
+            "constraints": "string",
             "note": "string or empty if none"
           }
         `
@@ -160,7 +160,56 @@ function App() {
           <div className="space-y-6 w-full">
             <div className="grid lg:grid-cols-2 gap-6">
               <div className="bg-gradient-to-br from-blue-950/40 to-sky-950/50 backdrop-blur-sm border border-indigo-400/30 rounded-2xl shadow-2xl p-8 space-y-4">
-                <div></div>
+                <div>
+                  <h3 className="text-lg font-semibold text-emerald-300">
+                    Problem
+                  </h3>
+                  <p className="text-gray-200">{questionData.problem}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-emerald-300">
+                    Example
+                  </h3>
+                  <pre className="bg-black/30 p-3 rounded text-gray-200 whitespace-pre-wrap">
+                    {questionData.example}
+                  </pre>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-emerald-300">
+                    Constraints
+                  </h3>
+                  <ul className="list-disc list-inside text-gray-200">
+                    {questionData.constraints.split("\n").map((line, idx) => (
+                      <li key={idx}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {questionData.note && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-emerald-300">
+                      Note
+                    </h3>
+                    <p className="text-gray-200">{questionData.note}</p>
+                  </div>
+                )}
+              </div>
+              <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="bg-gray-900/90 px-4 py-3 border-b border-gray-700/50 flex items-center gap-3">
+                  <Code className="w-5 h-5 text-emerald-400" />
+                  <h3 className="text-white text-lg font-semibold">
+                    Solution:
+                  </h3>
+                </div>
+                <CodeMirror
+                  value={code}
+                  height="420px"
+                  extensions={[javascript({ jsx: true })]}
+                  theme={githubDark}
+                  onChange={(val) => setCode(val)}
+                />
               </div>
             </div>
           </div>
