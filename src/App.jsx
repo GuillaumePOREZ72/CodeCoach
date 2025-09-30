@@ -212,6 +212,15 @@ function App() {
                 />
               </div>
             </div>
+            <div className="flex gap-6 lg:gap-10 justify-center items-center flex-col lg:flex-row">
+              <div className="flex flex-wrap gap-2 justify-center items-center">
+                <button
+                  onClick={checkSolution}
+                  disabled={loading || !aiReady || !code.trim()}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-emerald-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                ></button>
+              </div>
+            </div>
           </div>
         )}
       </div>
