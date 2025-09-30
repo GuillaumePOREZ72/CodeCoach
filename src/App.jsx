@@ -1,32 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Code, Play, RotateCcw, CheckCircle, ArrowLeft } from "lucide-react";
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { dracula } from "@uiw/codemirror-theme-dracula";
+import { ProblemPanel } from "./components/ProblemPanel";
+import { EditorPanel } from "./components/EditorPanel";
+import { usePuterAI } from "./hooks/usePuterAI";
+import { DIFFICULTIES, INITIAL_CODE, PROMPTS } from "./utils/constants.js";
 
 function App() {
-  const [aiReady, setAiReady] = useState(false);
+  const { ready: aiReady, chat } = usePuterAI();
+
   const [questionData, setQuestionData] = useState(null);
-  const [code, setCode] = useState(
-    `function solution() {\n // Your code here\n}`
-  );
+  const [code, setCode] = useState(INITIAL_CODE);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
   const [, setSolved] = useState(false);
   const [difficulty, setDifficulty] = useState("");
   const [warning, setWarning] = useState("");
-
-  useEffect(() => {
-    const checkReady = setInterval(() => {
-      if (window.puter?.ai?.chat) {
-        setAiReady(true);
-        clearInterval(checkReady);
-      }
-    }, 300);
-    return () => {
-      clearInterval(checkReady);
-    };
-  }, []);
 
   const handleDifficultySelect = (level) => {
     setDifficulty(level);
@@ -34,11 +22,9 @@ function App() {
   };
 
   const generateQuestion = async () => {
-    const validLevels = ["Beginner", "Medium", "Intermediate"];
-
-    if (!validLevels.includes(difficulty)) {
+    if (!DIFFICULTIES.includes(difficulty)) {
       setWarning(
-        "⚠️ PLease select a difficulty level before genrating a question."
+        "⚠️ Please select a difficulty level before genrating a question."
       );
       return;
     }
@@ -47,30 +33,12 @@ function App() {
     setLoading(true);
     setFeedback("");
     setSolved(false);
-    setCode(`function solution() {\n // Your code here\n}`);
+    setCode(INITIAL_CODE);
     setQuestionData(null);
 
     try {
-      const response = await window.puter.ai.chat(
-        `
-          Generate a random ${difficulty} level coding interview question like on LeetCode.
-          Return ONLY valid JSON with this structure:
-          {
-            "problem": "string",
-            "example": "string",
-            "constraints": "string",
-            "note": "string or empty if none"
-          }
-        `
-      );
-
-      const reply =
-        typeof response === "string"
-          ? response
-          : response.message?.content || "";
-
+      const reply = await chat(PROMPTS.question(difficulty));
       const parsed = JSON.parse(reply);
-
       setQuestionData(parsed);
     } catch (error) {
       setFeedback(`⛔ Error: ${error.message}`);
@@ -80,26 +48,10 @@ function App() {
 
   const checkSolution = async () => {
     if (!code.trim()) return;
-
     setLoading(true);
     try {
-      const response = await window.puter.ai.chat(
-        `
-          You are a helpful interview coach.
-          The question is: "${questionData?.problem}".
-          Here is the candidate's solution:\n${code}
-
-          1. If correct, say: "✅ Correct! Well done."
-          2. If wrong, give hints but don't reveal the full answer.
-        `
-      );
-
-      const reply =
-        typeof response === "string"
-          ? response
-          : response.message?.content || "";
+      const reply = await chat(PROMPTS.review(questionData?.problem, code));
       setFeedback(reply);
-
       if (reply.includes("✅ Correct!")) setSolved(true);
     } catch (error) {
       setFeedback(`⛔ Error: ${error.message}`);
@@ -128,7 +80,7 @@ function App() {
                 Select Difficulty:
               </p>
               <div className="flex justify-center gap-3 flex-wrap sm:flex-wrap">
-                {["Beginner", "Medium", "Intermediate"].map((level) => (
+                {DIFFICULTIES.map((level) => (
                   <button
                     key={level}
                     onClick={() => handleDifficultySelect(level)}
@@ -159,59 +111,10 @@ function App() {
         ) : (
           <div className="space-y-6 w-full">
             <div className="grid lg:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-blue-950/40 to-sky-950/50 backdrop-blur-sm border border-indigo-400/30 rounded-2xl shadow-2xl p-8 space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-emerald-300">
-                    Problem
-                  </h3>
-                  <p className="text-gray-200">{questionData.problem}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-emerald-300">
-                    Example
-                  </h3>
-                  <pre className="bg-black/30 p-3 rounded text-gray-200 whitespace-pre-wrap">
-                    {questionData.example}
-                  </pre>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-emerald-300">
-                    Constraints
-                  </h3>
-                  <ul className="list-disc list-inside text-gray-200">
-                    {questionData.constraints.split("\n").map((line, idx) => (
-                      <li key={idx}>{line}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                {questionData.note && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-emerald-300">
-                      Note
-                    </h3>
-                    <p className="text-gray-200">{questionData.note}</p>
-                  </div>
-                )}
-              </div>
-              <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden">
-                <div className="bg-gray-900/90 px-4 py-3 border-b border-gray-700/50 flex items-center gap-3">
-                  <Code className="w-5 h-5 text-emerald-400" />
-                  <h3 className="text-white text-lg font-semibold">
-                    Solution:
-                  </h3>
-                </div>
-                <CodeMirror
-                  value={code}
-                  height="420px"
-                  extensions={[javascript({ jsx: true })]}
-                  theme={dracula}
-                  onChange={(val) => setCode(val)}
-                />
-              </div>
+              <ProblemPanel data={questionData} />
+              <EditorPanel code={code} onChange={setCode} />
             </div>
+
             <div className="flex gap-6 lg:gap-10 justify-center items-center flex-col lg:flex-row">
               <div className="flex flex-wrap gap-3 justify-center items-center">
                 <button
@@ -235,7 +138,7 @@ function App() {
                 <button
                   onClick={() => {
                     setQuestionData(null);
-                    setCode(`function solution() {\n // Your code here\n}`);
+                    setCode(INITIAL_CODE);
                     setFeedback("");
                     setSolved(false);
                     setLoading(false);
@@ -249,9 +152,10 @@ function App() {
                   Go Back
                 </button>
               </div>
+
               <div className="flex gap-3 items-center flex-wrap">
                 <p className="text-slate-300 font-semibold">Difficulty: </p>
-                {["Beginner", "Medium", "Intermediate"].map((level) => (
+                {DIFFICULTIES.map((level) => (
                   <button
                     key={level}
                     onClick={() => handleDifficultySelect(level)}
@@ -266,8 +170,11 @@ function App() {
                 ))}
               </div>
             </div>
+
             {feedback && (
               <div
+                role="status"
+                aria-live="polite"
                 className={`
                   rounded-3xl p-6 shadow-2xl backdrop-blur-sm ${
                     feedback.includes("✅")
