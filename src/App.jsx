@@ -12,7 +12,6 @@ function App() {
   const [code, setCode] = useState(INITIAL_CODE);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
-  const [, setSolved] = useState(false);
   const [difficulty, setDifficulty] = useState("");
   const [warning, setWarning] = useState("");
 
@@ -32,7 +31,6 @@ function App() {
     setWarning("");
     setLoading(true);
     setFeedback("");
-    setSolved(false);
     setCode(INITIAL_CODE);
     setQuestionData(null);
 
@@ -52,7 +50,6 @@ function App() {
     try {
       const reply = await chat(PROMPTS.review(questionData?.problem, code));
       setFeedback(reply);
-      if (reply.includes("✅ Correct!")) setSolved(true);
     } catch (error) {
       setFeedback(`⛔ Error: ${error.message}`);
     }
@@ -140,7 +137,6 @@ function App() {
                     setQuestionData(null);
                     setCode(INITIAL_CODE);
                     setFeedback("");
-                    setSolved(false);
                     setLoading(false);
                     setWarning("");
                     setDifficulty("");
