@@ -3,16 +3,33 @@ import { Code, Play, RotateCcw, CheckCircle, ArrowLeft } from "lucide-react";
 import { ProblemPanel } from "./components/ProblemPanel";
 import { EditorPanel } from "./components/EditorPanel";
 import { usePuterAI } from "./hooks/usePuterAI";
+import { useLocalStorage } from "./hooks/useLocalStorage.js";
 import { DIFFICULTIES, INITIAL_CODE, PROMPTS } from "./utils/constants.js";
 
 function App() {
   const { ready: aiReady, chat } = usePuterAI();
 
-  const [questionData, setQuestionData] = useState(null);
-  const [code, setCode] = useState(INITIAL_CODE);
-  const [feedback, setFeedback] = useState("");
+  const [questionData, setQuestionData] = useLocalStorage(
+    "question:data",
+    null,
+    { parse: true }
+  );
+  const [code, setCode] = useLocalStorage(
+    "editor:code",
+    INITIAL_CODE,
+    { parse: false }
+  );
+  const [feedback, setFeedback] = useLocalStorage(
+    "feedback",
+    "",
+    { parse: false }
+  );
+  const [difficulty, setDifficulty] = useLocalStorage(
+    "difficulty",
+    "",
+    { parse: false }
+  );
   const [loading, setLoading] = useState(false);
-  const [difficulty, setDifficulty] = useState("");
   const [warning, setWarning] = useState("");
 
   const handleDifficultySelect = (level) => {
@@ -23,7 +40,7 @@ function App() {
   const generateQuestion = async () => {
     if (!DIFFICULTIES.includes(difficulty)) {
       setWarning(
-        "⚠️ Please select a difficulty level before genrating a question."
+        "⚠️ Please select a difficulty level before generating a question."
       );
       return;
     }

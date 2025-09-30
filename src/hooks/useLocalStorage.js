@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 
-export function useLocalStorage(key, initialValue, { parse = true } = {}) {
-  const read = () => {
+export function useLocalStorage(key, initialValue, { parse = false } = {}) {
+  const [value, setValue] = useState(() => {
     try {
       const raw = window.localStorage.getItem(key);
       if (raw === null) return initialValue;
@@ -9,37 +9,20 @@ export function useLocalStorage(key, initialValue, { parse = true } = {}) {
     } catch {
       return initialValue;
     }
-  };
+  });
 
-  const [state, setState] = useState(() => read());
-
-  const set = useCallback(
-    (updater) => {
-      setState((prev) => {
-        const value = typeof updater === "function" ? updater(prev) : updater;
-        try {
-          if (value === undefined) window.localStorage.removeItem(key);
-          else
-            window.localStorage.setItem(
-              key,
-              parse ? JSON.stringify(value) : String(value)
-            );
-        } catch {
-          return value;
-        }
-      });
-    },
-    [key, parse]
-  );
-
-  const remove = useCallback(() => {
+  useEffect(() => {
     try {
-      window.localStorage.removeItem(key);
+      if (value === undefined) {
+        window.localStorage.removeItem(key);
+      } else {
+        const raw = parse ? JSON.stringify(value) : String(value);
+        window.localStorage.setItem(key, raw);
+      }
     } catch {
-      console.log("error");
+      // ignore quota/serialization errors
     }
-    setState(initialValue);
-  }, [key, initialValue]);
+  }, [key, value, parse]);
 
-  return [state, set, remove];
+  return [value, setValue];
 }
