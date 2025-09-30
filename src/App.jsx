@@ -12,7 +12,7 @@ function App() {
   );
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
-  const [solved, setSolved] = useState(false);
+  const [, setSolved] = useState(false);
   const [difficulty, setDifficulty] = useState("");
   const [warning, setWarning] = useState("");
 
@@ -108,9 +108,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-green-950 to-teal-900 flex flex-col items-center justify-center p-6 gap-10">
-      <h1 className="text-6xl sm:text-8xl font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-green-400 bg-clip-text text-transparent text-center">
-        JobSensei
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex flex-col items-center justify-center p-6 gap-10">
+      <h1 className="text-6xl sm:text-8xl font-bold bg-gradient-to-r from-sky-400 via-blue-300 to-indigo-400 bg-clip-text text-transparent text-center">
+        CodeCoach
       </h1>
       <div className="w-full max-w-7xl flex flex-col items-center justify-center">
         {!questionData ? (
