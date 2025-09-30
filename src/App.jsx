@@ -213,12 +213,45 @@ function App() {
               </div>
             </div>
             <div className="flex gap-6 lg:gap-10 justify-center items-center flex-col lg:flex-row">
-              <div className="flex flex-wrap gap-2 justify-center items-center">
+              <div className="flex flex-wrap gap-3 justify-center items-center">
                 <button
                   onClick={checkSolution}
                   disabled={loading || !aiReady || !code.trim()}
                   className="px-6 py-3 bg-gradient-to-r from-blue-500 to-emerald-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-                ></button>
+                >
+                  <Play className="w-5 h-5" />
+                  {loading ? "Checking..." : "Check solution"}
+                </button>
+
+                <button
+                  onClick={generateQuestion}
+                  disabled={loading || !aiReady}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  {loading ? "Gener ting..." : "New Question"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setQuestionData(null);
+                    setCode(`function solution() {\n // Your code here\n}`);
+                    setFeedBack("");
+                    setSolved(false);
+                    setLoading(false);
+                    setWarning("");
+                    setDifficulty("");
+                  }}
+                  disabled={loading}
+                  className="px-6 py-3 bg-gradient-to-r from-red-500 to-amber-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Go Back
+                </button>
+              </div>
+              <div className="flex gap-3 items-center flex-wrap">
+                  <p className="text-slate-300 font-semibold">Difficulty: </p>
+                  
               </div>
             </div>
           </div>
