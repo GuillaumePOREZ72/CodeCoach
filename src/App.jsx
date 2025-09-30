@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Code, Play, RotateCcw, CheckCircle, ArrowLeft } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { githubDark } from "@uiw/codemirror-theme-github";
+import { dracula } from "@uiw/codemirror-theme-dracula";
 
 function App() {
   const [aiReady, setAiReady] = useState(false);
@@ -10,7 +10,7 @@ function App() {
   const [code, setCode] = useState(
     `function solution() {\n // Your code here\n}`
   );
-  const [feedBack, setFeedBack] = useState("");
+  const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
   const [solved, setSolved] = useState(false);
   const [difficulty, setDifficulty] = useState("");
@@ -45,7 +45,7 @@ function App() {
 
     setWarning("");
     setLoading(true);
-    setFeedBack("");
+    setFeedback("");
     setSolved(false);
     setCode(`function solution() {\n // Your code here\n}`);
     setQuestionData(null);
@@ -73,7 +73,7 @@ function App() {
 
       setQuestionData(parsed);
     } catch (error) {
-      setFeedBack(`⛔ Error: ${error.message}`);
+      setFeedback(`⛔ Error: ${error.message}`);
     }
     setLoading(false);
   };
@@ -98,11 +98,11 @@ function App() {
         typeof response === "string"
           ? response
           : response.message?.content || "";
-      setFeedBack(reply);
+      setFeedback(reply);
 
       if (reply.includes("✅ Correct!")) setSolved(true);
     } catch (error) {
-      setFeedBack(`⛔ Error: ${error.message}`);
+      setFeedback(`⛔ Error: ${error.message}`);
     }
     setLoading(false);
   };
@@ -149,7 +149,7 @@ function App() {
 
             <button
               onClick={generateQuestion}
-              disable={!aiReady || loading}
+              disabled={!aiReady || loading}
               className="w-full px-10 py-4 bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 text-white
               font-semibold text-lg rounded-3xl shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
@@ -207,7 +207,7 @@ function App() {
                   value={code}
                   height="420px"
                   extensions={[javascript({ jsx: true })]}
-                  theme={githubDark}
+                  theme={dracula}
                   onChange={(val) => setCode(val)}
                 />
               </div>
@@ -229,14 +229,14 @@ function App() {
                   className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <RotateCcw className="w-5 h-5" />
-                  {loading ? "Gener ting..." : "New Question"}
+                  {loading ? "Generating..." : "New Question"}
                 </button>
 
                 <button
                   onClick={() => {
                     setQuestionData(null);
                     setCode(`function solution() {\n // Your code here\n}`);
-                    setFeedBack("");
+                    setFeedback("");
                     setSolved(false);
                     setLoading(false);
                     setWarning("");
@@ -250,10 +250,50 @@ function App() {
                 </button>
               </div>
               <div className="flex gap-3 items-center flex-wrap">
-                  <p className="text-slate-300 font-semibold">Difficulty: </p>
-                  
+                <p className="text-slate-300 font-semibold">Difficulty: </p>
+                {["Beginner", "Medium", "Intermediate"].map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => handleDifficultySelect(level)}
+                    className={`px-4 py-2 rounded-full font-semibold transition-colors duration-200 cursor-pointer ${
+                      difficulty === level
+                        ? "bg-blue-500 text-white shadow-md"
+                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
               </div>
             </div>
+            {feedback && (
+              <div
+                className={`
+                  rounded-3xl p-6 shadow-2xl backdrop-blur-sm ${
+                    feedback.includes("✅")
+                      ? "bg-green-900/40 border border-green-500/30"
+                      : feedback.includes("⛔")
+                      ? "bg-red-900/40 border border-red-500/30"
+                      : "bg-gray-800/60 border border-gray-700/50"
+                  }
+              `}
+              >
+                <div className="flex items-start gap-4">
+                  <CheckCircle
+                    className={`w-6 h-6 ${
+                      feedback.includes("✅")
+                        ? "text-green-400"
+                        : feedback.includes("⛔")
+                        ? "text-red-400"
+                        : "text-blue-400"
+                    }`}
+                  />
+                  <div className="flex-1 text-gray-200 whitespace-pre-wrap leading-relaxed">
+                    {feedback}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
