@@ -1,10 +1,22 @@
 import { useState } from "react";
-import { Code, Play, RotateCcw, CheckCircle, ArrowLeft } from "lucide-react";
+import {
+  Code,
+  Play,
+  RotateCcw,
+  CheckCircle,
+  ArrowLeft,
+  CodeXml,
+} from "lucide-react";
 import { ProblemPanel } from "./components/ProblemPanel";
 import { EditorPanel } from "./components/EditorPanel";
 import { usePuterAI } from "./hooks/usePuterAI";
 import { useLocalStorage } from "./hooks/useLocalStorage.js";
-import { DIFFICULTIES, INITIAL_CODE, PROMPTS } from "./utils/constants.js";
+import {
+  DIFFICULTIES,
+  LANGUAGES,
+  INITIAL_CODE,
+  PROMPTS,
+} from "./utils/constants.js";
 
 function App() {
   const { ready: aiReady, chat } = usePuterAI();
@@ -14,27 +26,37 @@ function App() {
     null,
     { parse: true }
   );
+
+  const [currentLanguage, setCurrentLanguage] = useLocalStorage(
+    "current:language",
+    "JavaScript",
+    { parse: false }
+  );
+
   const [code, setCode] = useLocalStorage(
     "editor:code",
-    INITIAL_CODE,
-    { parse: false }
+    INITIAL_CODE["JavaScript"],
+    {
+      parse: false,
+    }
   );
-  const [feedback, setFeedback] = useLocalStorage(
-    "feedback",
-    "",
-    { parse: false }
-  );
-  const [difficulty, setDifficulty] = useLocalStorage(
-    "difficulty",
-    "",
-    { parse: false }
-  );
+  const [feedback, setFeedback] = useLocalStorage("feedback", "", {
+    parse: false,
+  });
+  const [difficulty, setDifficulty] = useLocalStorage("difficulty", "", {
+    parse: false,
+  });
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState("");
 
   const handleDifficultySelect = (level) => {
     setDifficulty(level);
     if (warning) setWarning("");
+  };
+
+  const handleChange = (language) => {
+    setCurrentLanguage(language);
+    setCode(INITIAL_CODE[language] || INITIAL_CODE["JavaScript"]);
   };
 
   const generateQuestion = async () => {
@@ -48,12 +70,18 @@ function App() {
     setWarning("");
     setLoading(true);
     setFeedback("");
-    setCode(INITIAL_CODE);
+    setCode(INITIAL_CODE[currentLanguage] || INITIAL_CODE["JavaScript"]);
     setQuestionData(null);
 
     try {
-      const reply = await chat(PROMPTS.question(difficulty));
+      const reply = await chat(PROMPTS.question(difficulty, currentLanguage));
       const parsed = JSON.parse(reply);
+
+      const language = parsed.language || "JavaScript";
+      setCurrentLanguage(language);
+
+      setCode(INITIAL_CODE[language] || INITIAL_CODE["JavaScript"]);
+
       setQuestionData(parsed);
     } catch (error) {
       setFeedback(`⛔ Error: ${error.message}`);
@@ -65,7 +93,9 @@ function App() {
     if (!code.trim()) return;
     setLoading(true);
     try {
-      const reply = await chat(PROMPTS.review(questionData?.problem, code));
+      const reply = await chat(
+        PROMPTS.review(questionData?.problem, code, currentLanguage)
+      );
       setFeedback(reply);
     } catch (error) {
       setFeedback(`⛔ Error: ${error.message}`);
@@ -74,31 +104,53 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex flex-col items-center justify-center p-6 gap-10">
-      <h1 className="text-6xl sm:text-8xl font-bold bg-gradient-to-r from-sky-400 via-blue-300 to-indigo-400 bg-clip-text text-transparent text-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex flex-col items-center justify-center p-3 sm:p-6 gap-6 sm:gap-10">
+      <h1 className="text-4xl sm:text-6xl lg:text-8xl font-bold bg-gradient-to-r from-sky-400 via-blue-300 to-indigo-400 bg-clip-text text-transparent text-center px-4">
         CodeCoach
       </h1>
-      <div className="w-full max-w-7xl flex flex-col items-center justify-center">
+      <div className="w-full max-w-7xl flex flex-col items-center justify-center px-2 sm:px-0">
         {!questionData ? (
-          <div className="w-full max-w-md p-10 bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-3xl shadow-lg shadow-sky-600 hover:shadow-2xl hover:shadow-sky-400 transition duration-300 text-center">
-            <Code className="mx-auto mb-6 text-cyan-400 w-24 h-24" />
-            <h2 className="text-3xl font-semibold text-white mb-4">
+          <div className="w-full max-w-md p-6 sm:p-10 bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-3xl shadow-lg shadow-sky-600 hover:shadow-2xl hover:shadow-sky-400 transition duration-300 text-center">
+            <CodeXml className="mx-auto mb-4 sm:mb-6 text-cyan-400 w-16 h-16 sm:w-24 sm:h-24" />
+            <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-3 sm:mb-4">
               Ready to Practice?
             </h2>
-            <p className="text-slate-300 mb-8 text-lg leading-relaxed">
+            <p className="text-slate-300 mb-6 sm:mb-8 text-base sm:text-lg leading-relaxed">
               Solve coding interview questions generated by AI, get hints, and
               improve your skills!
             </p>
-            <div className="mb-8">
-              <p className="text-sky-400 mb-4 text-lg font-semibold text-left">
+
+            <div className="mb-6 sm:mb-8">
+              <p className="text-sky-400 mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-left">
+                Select Language:
+              </p>
+              <div className="flex justify-center gap-2 flex-wrap">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => handleChange(lang)}
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition-colors duration-200 cursor-pointer text-xs sm:text-sm ${
+                      currentLanguage === lang
+                        ? "bg-emerald-500 text-white shadow-md"
+                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6 sm:mb-8">
+              <p className="text-sky-400 mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-left">
                 Select Difficulty:
               </p>
-              <div className="flex justify-center gap-3 flex-wrap sm:flex-wrap">
+              <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
                 {DIFFICULTIES.map((level) => (
                   <button
                     key={level}
                     onClick={() => handleDifficultySelect(level)}
-                    className={`px-6 py-3 rounded-full font-semibold transition-colors duration-200 cursor-pointer ${
+                    className={`px-4 py-2 sm:px-6 sm:py-3 rounded-full font-semibold transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
                       difficulty === level
                         ? "bg-blue-500 text-white shadow-md"
                         : "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -110,69 +162,77 @@ function App() {
               </div>
             </div>
             {warning && (
-              <p className="text-red-500 font-semibold mb-4">{warning}</p>
+              <p className="text-red-500 font-semibold mb-4 text-sm sm:text-base">
+                {warning}
+              </p>
             )}
 
             <button
               onClick={generateQuestion}
               disabled={!aiReady || loading}
-              className="w-full px-10 py-4 bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 text-white
-              font-semibold text-lg rounded-3xl shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full px-6 py-3 sm:px-10 sm:py-4 bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 text-white
+              font-semibold text-base sm:text-lg rounded-3xl shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? "Generating..." : "Generate Question"}
             </button>
           </div>
         ) : (
-          <div className="space-y-6 w-full">
-            <div className="grid lg:grid-cols-2 gap-6">
-              <ProblemPanel data={questionData} />
-              <EditorPanel code={code} onChange={setCode} />
+          <div className="space-y-4 sm:space-y-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <ProblemPanel data={questionData} language={currentLanguage} />
+              <EditorPanel
+                code={code}
+                onChange={setCode}
+                language={currentLanguage}
+              />
             </div>
 
-            <div className="flex gap-6 lg:gap-10 justify-center items-center flex-col lg:flex-row">
-              <div className="flex flex-wrap gap-3 justify-center items-center">
+            <div className="flex gap-4 sm:gap-6 lg:gap-10 justify-center items-center flex-col">
+              <div className="flex flex-wrap gap-2 sm:gap-3 justify-center items-center w-full">
                 <button
                   onClick={checkSolution}
                   disabled={loading || !aiReady || !code.trim()}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-emerald-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 min-w-[140px] sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-500 to-emerald-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
                 >
-                  <Play className="w-5 h-5" />
-                  {loading ? "Checking..." : "Check solution"}
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                  {loading ? "Checking..." : "Check"}
                 </button>
 
                 <button
                   onClick={generateQuestion}
                   disabled={loading || !aiReady}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 min-w-[140px] sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
                 >
-                  <RotateCcw className="w-5 h-5" />
-                  {loading ? "Generating..." : "New Question"}
+                  <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+                  {loading ? "Generating..." : "New"}
                 </button>
 
                 <button
                   onClick={() => {
                     setQuestionData(null);
-                    setCode(INITIAL_CODE);
+                    setCode(INITIAL_CODE[currentLanguage]);
                     setFeedback("");
                     setLoading(false);
                     setWarning("");
                     setDifficulty("");
                   }}
                   disabled={loading}
-                  className="px-6 py-3 bg-gradient-to-r from-red-500 to-amber-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 min-w-[140px] sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-red-500 to-amber-500 hover:opacity-80 text-white font-semibold rounded-2xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
                 >
-                  <ArrowLeft className="w-5 h-5" />
-                  Go Back
+                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Back
                 </button>
               </div>
 
-              <div className="flex gap-3 items-center flex-wrap">
-                <p className="text-slate-300 font-semibold">Difficulty: </p>
+              <div className="flex gap-2 sm:gap-3 items-center flex-wrap justify-center w-full">
+                <p className="text-slate-300 font-semibold text-sm sm:text-base">
+                  Difficulty:{" "}
+                </p>
                 {DIFFICULTIES.map((level) => (
                   <button
                     key={level}
                     onClick={() => handleDifficultySelect(level)}
-                    className={`px-4 py-2 rounded-full font-semibold transition-colors duration-200 cursor-pointer ${
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition-colors duration-200 cursor-pointer text-xs sm:text-sm ${
                       difficulty === level
                         ? "bg-blue-500 text-white shadow-md"
                         : "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -189,7 +249,7 @@ function App() {
                 role="status"
                 aria-live="polite"
                 className={`
-                  rounded-3xl p-6 shadow-2xl backdrop-blur-sm ${
+                  rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-sm ${
                     feedback.includes("✅")
                       ? "bg-green-900/40 border border-green-500/30"
                       : feedback.includes("⛔")
@@ -198,9 +258,9 @@ function App() {
                   }
               `}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <CheckCircle
-                    className={`w-6 h-6 ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 ${
                       feedback.includes("✅")
                         ? "text-green-400"
                         : feedback.includes("⛔")
@@ -208,7 +268,7 @@ function App() {
                         : "text-blue-400"
                     }`}
                   />
-                  <div className="flex-1 text-gray-200 whitespace-pre-wrap leading-relaxed">
+                  <div className="flex-1 text-gray-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
                     {feedback}
                   </div>
                 </div>

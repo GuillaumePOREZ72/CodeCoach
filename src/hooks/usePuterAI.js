@@ -25,7 +25,7 @@ export function usePuterAI() {
         if (auth?.signInAnonymously) {
           try {
             await auth.signInAnonymously();
-          } catch (_) {
+          } catch {
             // ignore: déjà connecté ou cookies bloqués
           }
         }
