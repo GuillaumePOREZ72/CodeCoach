@@ -3,12 +3,14 @@ import { python } from "@codemirror/lang-python";
 import { java } from "@codemirror/lang-java";
 import { cpp } from "@codemirror/lang-cpp";
 import { rust } from "@codemirror/lang-rust";
+import { Language } from "./constants";
+import { LanguageSupport } from "@codemirror/language";
 
 /**
  * Retourne l'extension CodeMirror correspondant au langage
  */
 
-export function getLanguageExtension(language) {
+export function getLanguageExtension(language: Language): LanguageSupport {
   switch (language) {
     case "JavaScript":
       return javascript();
@@ -24,6 +26,7 @@ export function getLanguageExtension(language) {
       // Go n'a pas d'extension officielle, on utilise JavaScript comme fallback
       return javascript();
     default:
-      return javascript();
+      const exhaustiveCheck: never = language;
+      throw new Error(`Langage non géré: ${exhaustiveCheck}`);
   }
 }

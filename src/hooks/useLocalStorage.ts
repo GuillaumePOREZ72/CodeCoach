@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 
-export function useLocalStorage(key, initialValue, { parse = false } = {}) {
-  const [value, setValue] = useState(() => {
+interface UseLocalStorageOptions {
+  parse?: boolean;
+}
+
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T,
+  options: UseLocalStorageOptions = {}
+): [T, Dispatch<SetStateAction<T>>] {
+  const { parse = false } = options;
+
+  const [value, setValue] = useState<T>(() => {
     try {
       const raw = window.localStorage.getItem(key);
       if (raw === null) return initialValue;
