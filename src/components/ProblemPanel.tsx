@@ -1,4 +1,21 @@
-export function ProblemPanel({ data, language = "JavaScript" }) {
+import { Language } from "../utils/constants";
+
+interface ProblemData {
+  problem: string;
+  example?: string;
+  constraints?: string;
+  note?: string;
+}
+
+interface ProblemPanelProps {
+  data: ProblemData;
+  language?: Language;
+}
+
+export function ProblemPanel({
+  data,
+  language = "JavaScript",
+}: ProblemPanelProps) {
   if (!data) return null;
 
   return (
