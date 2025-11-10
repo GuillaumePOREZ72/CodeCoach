@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 
 export function usePuterAI() {
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState(null);
+  const [ready, setReady] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    const waitFor = (cond) =>
+    const waitFor = (cond: () => boolean): Promise<void> =>
       new Promise((resolve) => {
         const id = setInterval(() => {
           if (cond()) {
@@ -32,7 +32,7 @@ export function usePuterAI() {
         await waitFor(() => !!window.puter?.ai?.chat);
         if (!cancelled) setReady(true);
       } catch (e) {
-        if (!cancelled) setError(e);
+        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
       }
     })();
 
@@ -41,21 +41,23 @@ export function usePuterAI() {
     };
   }, []);
 
-  const chat = useCallback(async (prompt) => {
+  const chat = useCallback(async (prompt: string): Promise<string> => {
     try {
-      const res = await window.puter.ai.chat(prompt);
+      const res = await window.puter!.ai!.chat(prompt);
       return typeof res === "string" ? res : res?.message?.content || "";
     } catch (e) {
-      if (e?.status === 401 || /401|unauthor/i.test(String(e))) {
-        setError(
-          new Error(
-            "Unauthorized: connectez-vous à puter.com et/ou autorisez les cookies tiers."
-          )
+      const errorObj = e instanceof Error ? e : new Error(String(e));
+
+      if ((e as any)?.status === 401 || /401|unauthor/i.test(String(e))) {
+        const authError = new Error(
+          "Unauthorized: connectez-vous à puter.com et/ou autorisez les cookies tiers."
         );
+        setError(authError);
+        throw authError;
       } else {
-        setError(e);
+        setError(errorObj);
+        throw errorObj;
       }
-      throw e;
     }
   }, []);
 
