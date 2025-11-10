@@ -1,8 +1,18 @@
-export const DIFFICULTIES = ["Beginner", "Medium", "Intermediate"];
+export const DIFFICULTIES = ["Beginner", "Medium", "Intermediate"] as const;
 
-export const LANGUAGES = ["JavaScript", "Python", "Java", "C++", "Go", "Rust"];
+export const LANGUAGES = [
+  "JavaScript",
+  "Python",
+  "Java",
+  "C++",
+  "Go",
+  "Rust",
+] as const;
 
-export const INITIAL_CODE = {
+export type Difficulty = (typeof DIFFICULTIES)[number];
+export type Language = (typeof LANGUAGES)[number];
+
+export const INITIAL_CODE: Record<Language, string> = {
   JavaScript: `function solution() {\n  // Your code here\n}`,
   Python: `def solution():\n    # Your code here\n    pass`,
   Java: `public class Solution {\n    public void solution() {\n        // Your code here\n    }\n}`,
@@ -12,7 +22,7 @@ export const INITIAL_CODE = {
 };
 
 export const PROMPTS = {
-  question: (level, selectedLanguage) => `
+  question: (level: Difficulty, selectedLanguage: Language): string => `
   Generate a random ${level} level coding interview question like on LeetCode.
   The programming language MUST be: ${selectedLanguage}
   Return ONLY valid JSON with this structure:
@@ -23,7 +33,7 @@ export const PROMPTS = {
     "constraints": "string",
     "note": "string or empty if none"
   }`,
-  review: (problem, code, language) => `
+  review: (problem: string, code: string, language: Language): string => `
   You are a helpful interview coach.
   The question is: "${problem}".
   The programming language is: ${language}.
