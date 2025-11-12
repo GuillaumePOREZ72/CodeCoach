@@ -25,8 +25,5 @@ export function getLanguageExtension(language: Language): LanguageSupport {
     case "Go":
       // Go n'a pas d'extension officielle, on utilise JavaScript comme fallback
       return javascript();
-    default:
-      const exhaustiveCheck: never = language;
-      throw new Error(`Langage non géré: ${exhaustiveCheck}`);
   }
 }
