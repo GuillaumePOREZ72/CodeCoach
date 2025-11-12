@@ -1,9 +1,19 @@
-import { Code } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { dracula } from "@uiw/codemirror-theme-dracula";
 import { getLanguageExtension } from "../utils/languageExtensions";
+import { Language } from "../utils/constants";
 
-export function EditorPanel({ code, onChange, language = "JavaScript" }) {
+interface EditorPanelProps {
+  code: string;
+  onChange: (value: string) => void;
+  language?: Language;
+}
+
+export function EditorPanel({
+  code,
+  onChange,
+  language = "JavaScript",
+}: EditorPanelProps) {
   return (
     <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700 rounded-3xl shadow-xl p-6">
       <h2 className="text-2xl font-bold text-cyan-400 mb-4 flex items-center gap-2">

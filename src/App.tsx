@@ -1,66 +1,73 @@
 import { useState } from "react";
-import {
-  Code,
-  Play,
-  RotateCcw,
-  CheckCircle,
-  ArrowLeft,
-  CodeXml,
-} from "lucide-react";
+import { Play, RotateCcw, CheckCircle, ArrowLeft, CodeXml } from "lucide-react";
 import { ProblemPanel } from "./components/ProblemPanel";
 import { EditorPanel } from "./components/EditorPanel";
 import { usePuterAI } from "./hooks/usePuterAI";
-import { useLocalStorage } from "./hooks/useLocalStorage.js";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 import {
   DIFFICULTIES,
   LANGUAGES,
   INITIAL_CODE,
   PROMPTS,
-} from "./utils/constants.js";
+  Language,
+  Difficulty,
+} from "./utils/constants";
+
+interface QuestionData {
+  language?: string;
+  problem: string;
+  example?: string;
+  constraints?: string;
+  note?: string;
+}
 
 function App() {
   const { ready: aiReady, chat } = usePuterAI();
 
-  const [questionData, setQuestionData] = useLocalStorage(
+  const [questionData, setQuestionData] = useLocalStorage<QuestionData | null>(
     "question:data",
     null,
     { parse: true }
   );
 
-  const [currentLanguage, setCurrentLanguage] = useLocalStorage(
+  const [currentLanguage, setCurrentLanguage] = useLocalStorage<Language>(
     "current:language",
     "JavaScript",
     { parse: false }
   );
 
-  const [code, setCode] = useLocalStorage(
+  const [code, setCode] = useLocalStorage<string>(
     "editor:code",
     INITIAL_CODE["JavaScript"],
     {
       parse: false,
     }
   );
-  const [feedback, setFeedback] = useLocalStorage("feedback", "", {
+  const [feedback, setFeedback] = useLocalStorage<string>("feedback", "", {
     parse: false,
   });
-  const [difficulty, setDifficulty] = useLocalStorage("difficulty", "", {
-    parse: false,
-  });
-  const [loading, setLoading] = useState(false);
-  const [warning, setWarning] = useState("");
+  const [difficulty, setDifficulty] = useLocalStorage<Difficulty | "">(
+    "difficulty",
+    "",
+    {
+      parse: false,
+    }
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [warning, setWarning] = useState<string>("");
 
-  const handleDifficultySelect = (level) => {
+  const handleDifficultySelect = (level: Difficulty) => {
     setDifficulty(level);
     if (warning) setWarning("");
   };
 
-  const handleChange = (language) => {
+  const handleChange = (language: Language) => {
     setCurrentLanguage(language);
     setCode(INITIAL_CODE[language] || INITIAL_CODE["JavaScript"]);
   };
 
   const generateQuestion = async () => {
-    if (!DIFFICULTIES.includes(difficulty)) {
+    if (!difficulty || !DIFFICULTIES.includes(difficulty as Difficulty)) {
       setWarning(
         "⚠️ Please select a difficulty level before generating a question."
       );
@@ -77,14 +84,17 @@ function App() {
       const reply = await chat(PROMPTS.question(difficulty, currentLanguage));
       const parsed = JSON.parse(reply);
 
-      const language = parsed.language || "JavaScript";
+      const language = LANGUAGES.includes(parsed.language as Language)
+        ? (parsed.language as Language)
+        : "JavaScript";
+
       setCurrentLanguage(language);
-
-      setCode(INITIAL_CODE[language] || INITIAL_CODE["JavaScript"]);
-
+      setCode(INITIAL_CODE[language]);
       setQuestionData(parsed);
     } catch (error) {
-      setFeedback(`⛔ Error: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setFeedback(`⛔ Error: ${errorMessage}`);
     }
     setLoading(false);
   };
@@ -94,13 +104,15 @@ function App() {
     setLoading(true);
     try {
       const reply = await chat(
-        PROMPTS.review(questionData?.problem, code, currentLanguage)
+        PROMPTS.review(questionData?.problem || "", code, currentLanguage)
       );
       setFeedback(reply);
     } catch (error) {
-      setFeedback(`⛔ Error: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setFeedback(`⛔ Error: ${errorMessage}`);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
